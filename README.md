@@ -9,6 +9,8 @@ Closest bid without going over wins the round (1 point; ties share; all over = n
 | Host phone | `/host` |
 | Player phones | `/play` |
 
+The host never sees the price before the reveal, so the host can play too (e.g. `/host` and `/play` in two tabs).
+
 ## Items
 
 Edit `items.json` (`name`, `price` in whole dollars, optional `description` and `image`). Images can be a URL or a file

@@ -31,12 +31,11 @@
 		{:else if game.item}
 			<p class="muted">Item {game.round + 1} of {game.total}</p>
 			<h2>{game.item.name}</h2>
-			<p>Price: <b>{money(game.item.price)}</b></p>
-
 			{#if game.phase === 'bidding'}
 				<p>{bidCount} of {game.players.length} bids in</p>
 				<button onclick={() => send({ type: 'reveal' })}>Reveal price</button>
 			{:else}
+				<p>Price: <b>{money(game.item.price)}</b></p>
 				<p>Winner: <b>{winnerNames || 'nobody (all over)'}</b></p>
 				<button onclick={() => send({ type: 'next' })}>
 					{game.round + 1 < game.total ? 'Next item' : 'Final scores'}

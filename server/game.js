@@ -36,7 +36,7 @@ const game = {
 /** @type {WebSocketServer} */
 let wss;
 
-/** Price and bids stay off the wire until the reveal, except the price goes to the host. */
+/** Price and bids stay off the wire until the reveal, even for the host, so the host can play too. */
 function view(isHost = false) {
 	const item = game.items[game.round];
 	const reveal = game.phase === 'reveal';
@@ -44,7 +44,7 @@ function view(isHost = false) {
 		phase: game.phase,
 		round: game.round,
 		total: game.items.length,
-		item: item && { ...item, price: isHost || reveal ? item.price : undefined },
+		item: item && { ...item, price: reveal ? item.price : undefined },
 		players: [...game.players.values()].map((p) => ({
 			id: p.id,
 			name: p.name,
