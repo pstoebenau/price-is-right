@@ -3,6 +3,8 @@
 	import { renderSVG } from 'uqr';
 	import { live, connect, money } from '#lib/game.svelte.js';
 
+	/** @typedef {import('#lib/game.svelte.js').Player} Player */
+
 	onMount(() => connect());
 
 	const joinUrl = `${location.origin}/play`;
@@ -10,197 +12,258 @@
 
 	const game = $derived(live.game);
 	const ranked = $derived(game ? game.players.toSorted((a, b) => b.score - a.score) : []);
-	const bids = $derived(
-		game ? game.players.filter((p) => p.bid != null).toSorted((a, b) => (b.bid ?? 0) - (a.bid ?? 0)) : []
-	);
+	const champs = $derived(ranked.filter((p) => p.score === ranked[0]?.score));
+	const roundWinners = $derived(game ? game.players.filter((p) => game.winners.includes(p.id)) : []);
+
+	/** @param {Player[]} players */
+	const wins = (players) => `${players.map((p) => p.name).join(' & ')} ${players.length > 1 ? 'win' : 'wins'}!`;
+
+	/** What a contestant's podium readout shows in the current phase. @param {Player} p */
+	function readout(p) {
+		if (game?.phase === 'bidding') return { text: p.hasBid ? 'Bid in' : '' };
+		if (game?.phase === 'reveal')
+			return {
+				text: p.bid == null ? 'No bid' : money(p.bid),
+				win: game.winners.includes(p.id),
+				bust: (p.bid ?? 0) > (game.item?.price ?? 0)
+			};
+		if (game?.phase === 'over') return { text: String(p.score), win: champs.includes(p) };
+		return { text: '' };
+	}
 </script>
 
-<main>
+{#snippet row(/** @type {Player[]} */ players)}
+	<ol class="row" aria-label="Contestants">
+		{#each players as p (p.id)}
+			{@const r = readout(p)}
+			<li class={{ podium: true, win: r.win, bust: r.bust }}>
+				<span class="readout led">{r.text}</span>
+				<span class="front">
+					<span class="name">{p.name}</span>
+					{#if game?.phase !== 'lobby' && game?.phase !== 'over'}
+						<span class="pts" title="{p.score} points">{p.score}</span>
+					{/if}
+				</span>
+			</li>
+		{/each}
+	</ol>
+{/snippet}
+
+<main class={game?.phase}>
 	{#if !game}
-		<p class="hint">Connecting…</p>
+		<p class="hint">Connecting to the game…</p>
 	{:else if game.phase === 'lobby'}
 		<h1 class="logo big">The Price<br />Is Right!</h1>
 		<div class="join">
 			<img class="qr" src={qr} alt="QR code to join at {joinUrl}" />
-			<p class="hint">Scan to join, or go to<br /><strong>{location.host}/play</strong></p>
+			<p>Scan to play, or go to<br /><strong>{location.host}/play</strong></p>
 		</div>
-		<ul class="names">
-			{#each game.players as p (p.id)}
-				<li>{p.name}</li>
-			{:else}
-				<li class="muted">Waiting for players…</li>
-			{/each}
-		</ul>
+		<h2 class="call">{game.players.length ? 'Come on down!' : 'Waiting for contestants…'}</h2>
+		{@render row(game.players)}
 	{:else if game.phase === 'over'}
-		<h1 class="logo">Final Scores</h1>
-		<ol class="scores">
-			{#each ranked as p (p.id)}
-				<li class={{ win: p.score === ranked[0].score }}><span>{p.name}</span><b>{p.score}</b></li>
-			{/each}
-		</ol>
+		<section class="headline">
+			<h1 class="logo">Final scores</h1>
+			{#if champs.length}<p class="call">{wins(champs)}</p>{/if}
+		</section>
+		{@render row(ranked)}
 	{:else if game.item}
-		<div class="stage">
-			<section class="item">
-				<p class="muted">Item {game.round + 1} of {game.total}</p>
-				{#if game.item.image}<img src={game.item.image} alt={game.item.name} />{/if}
-				<h1>{game.item.name}</h1>
-				{#if game.item.description}<p class="desc">{game.item.description}</p>{/if}
-			</section>
-
-			<section class="panel">
-				{#if game.phase === 'bidding'}
-					<h2>Place your bids!</h2>
-					<ul class="names">
-						{#each game.players as p (p.id)}
-							<li class={{ done: p.hasBid }}>{p.name} {p.hasBid ? '✓' : '…'}</li>
-						{/each}
-					</ul>
-				{:else}
-					<p class="price">Actual retail price<b>{money(game.item.price)}</b></p>
-					<ol class="scores">
-						{#each bids as p (p.id)}
-							<li class={{ win: game.winners.includes(p.id), over: (p.bid ?? 0) > (game.item.price ?? 0) }}>
-								<span>{p.name}</span><b>{money(p.bid)}</b>
-							</li>
-						{/each}
-					</ol>
-					{#if !game.winners.length}<p class="hint">Everyone overbid!</p>{/if}
-				{/if}
-			</section>
-
-			<aside class="panel">
-				<h2>Scores</h2>
-				<ol class="scores small">
-					{#each ranked as p (p.id)}
-						<li><span>{p.name}</span><b>{p.score}</b></li>
-					{/each}
-				</ol>
-			</aside>
-		</div>
+		<section class="prize">
+			{#if game.item.image}<img src={game.item.image} alt={game.item.name} />{/if}
+		</section>
+		<section class="headline">
+			<p class="count">Item {game.round + 1} of {game.total}</p>
+			<h1>{game.item.name}</h1>
+			{#if game.item.description}<p class="desc">{game.item.description}</p>{/if}
+			{#if game.phase === 'bidding'}
+				<p class="call">Place your bids!</p>
+			{:else}
+				<p class="said">The actual retail price is</p>
+				<p class="price marquee led">{money(game.item.price)}</p>
+				<p class="call">{roundWinners.length ? wins(roundWinners) : 'Everyone overbid!'}</p>
+			{/if}
+		</section>
+		{@render row(game.players)}
 	{/if}
 </main>
 
 <style>
 	main {
-		min-height: 100vh;
-		padding: 3vw;
-		display: flex;
-		flex-direction: column;
-		justify-content: center;
+		height: 100vh;
+		padding: 3vw 3vw 0;
+		display: grid;
+		/* minmax(0, …) keeps the contestants' row on screen however long the headline gets. */
+		grid-template: minmax(0, 1fr) auto / 1fr 1fr;
+		gap: 2vw 4vw;
+		align-items: center;
 		font-size: 2vw;
+		overflow: hidden;
+	}
+	/* Lobby and final scores stack in one centered column. */
+	main.lobby,
+	main.over {
+		grid-template: minmax(0, 1fr) auto auto auto / 1fr;
+		justify-items: center;
+		gap: 1.5vw;
+	}
+	main.over {
+		grid-template-rows: minmax(0, 1fr) auto;
+	}
+	.hint {
+		grid-column: 1 / -1;
+		text-align: center;
 	}
 	.big {
-		font-size: 9vw;
-		line-height: 1;
+		font-size: 5.5vw;
 	}
 	.logo {
 		font-size: 5vw;
 	}
-	.hint {
-		text-align: center;
-		font-size: 2.5vw;
-	}
-	.muted {
-		opacity: 0.7;
-	}
 	.join {
 		display: flex;
 		align-items: center;
-		justify-content: center;
-		gap: 3vw;
-		margin: 2vw 0;
+		gap: 2.5vw;
+		font-size: 2.4vw;
+	}
+	.join strong {
+		color: var(--yellow);
 	}
 	.qr {
-		width: 18vw;
+		width: 12vw;
 		border-radius: 1vw;
+		border: 0.5vw solid var(--yellow);
 	}
-	.join .hint {
-		text-align: left;
+	.call {
+		margin: 0;
+		font-family: var(--display);
+		font-size: 3vw;
+		color: var(--yellow);
+		transform: rotate(-2deg);
 	}
-	.names {
-		list-style: none;
-		padding: 0;
-		display: flex;
-		flex-wrap: wrap;
-		justify-content: center;
-		gap: 1vw;
-	}
-	.names li {
-		background: #ffffff22;
-		padding: 0.5vw 1.5vw;
-		border-radius: 99px;
-	}
-	.names li.done {
-		background: #1db954;
-	}
-	/* Item, bids/results and scores sit side by side so the reveal never drops below the fold. */
-	.stage {
+
+	.prize {
 		display: grid;
-		grid-template-columns: 1.2fr 1fr 18vw;
-		gap: 3vw;
-		align-items: center;
-		height: calc(100vh - 6vw);
+		place-items: center;
+		min-height: 0;
+		height: 100%;
 	}
-	.item {
-		text-align: center;
-	}
-	.item h1 {
-		font-size: 3.5vw;
-		margin: 0.5vw 0;
-	}
-	.item img {
-		max-height: 55vh;
+	.prize img {
 		max-width: 100%;
+		max-height: 55vh;
+		padding: 1vw;
 		border-radius: 1vw;
 		background: #fff;
+		box-shadow: 0 0 0 0.6vw var(--yellow), 0 2vw 4vw #0008;
 	}
-	.panel {
-		max-height: 100%;
-		overflow: auto;
-	}
-	.panel h2 {
-		margin: 0;
-		font-size: 2.2vw;
+	.headline {
 		text-align: center;
 	}
+	.headline h1 {
+		margin: 0.3em 0;
+		font-size: 3.6vw;
+	}
+	.count,
+	.said {
+		margin: 0;
+		opacity: 0.8;
+	}
 	.desc {
-		font-size: 2.2vw;
+		max-width: 32em;
+		margin: 0 auto 1.5vw;
+		font-size: 1.8vw;
+		line-height: 1.4;
 		opacity: 0.85;
 	}
 	.price {
-		margin: 0;
-		text-align: center;
-		font-size: 2.2vw;
-	}
-	.price b {
-		display: block;
+		display: inline-block;
+		margin: 0.5vw 0 1.5vw;
+		padding: 0.3em 0.6em;
 		font-size: 6vw;
-		color: #ffcc00;
 	}
-	.scores {
-		list-style: none;
+
+	/* Contestants' Row: one podium per player across the bottom of the screen. */
+	.row {
+		grid-column: 1 / -1;
+		width: 100%;
+		margin: 0;
 		padding: 0;
-		margin: 1vw auto;
-		display: grid;
-		gap: 0.6vw;
-	}
-	.scores li {
+		list-style: none;
 		display: flex;
-		justify-content: space-between;
-		background: #ffffff18;
-		padding: 0.6vw 1.5vw;
-		border-radius: 0.8vw;
-		font-size: 2.2vw;
+		justify-content: center;
+		align-items: flex-end;
+		gap: 1vw;
 	}
-	.scores li.win {
-		background: #ffcc00;
-		color: #1a1a1a;
+	.podium {
+		--c: var(--orange);
+		flex: 1 1 0;
+		min-width: 0;
+		max-width: 18vw;
+		display: flex;
+		flex-direction: column;
+		transition: transform 0.3s;
 	}
-	.scores li.over {
-		opacity: 0.45;
+	.podium:nth-child(4n + 2) {
+		--c: var(--pink);
+	}
+	.podium:nth-child(4n + 3) {
+		--c: var(--cyan);
+	}
+	.podium:nth-child(4n + 4) {
+		--c: var(--yellow);
+	}
+	.readout {
+		height: 5vw;
+		display: grid;
+		place-items: center;
+		margin: 0 1vw;
+		border: 0.35vw solid #4a4a66;
+		border-bottom: none;
+		border-radius: 0.8vw 0.8vw 0 0;
+		font-size: 2.6vw;
+		white-space: nowrap;
+	}
+	.front {
+		position: relative;
+		height: 7vw;
+		padding: 1.2vw 1vw;
+		background: var(--c);
+		color: var(--stage-deep);
+		text-align: center;
+		clip-path: polygon(0 0, 100% 0, 92% 100%, 8% 100%);
+	}
+	.name {
+		display: block;
+		font-family: var(--display);
+		font-size: 2vw;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.pts {
+		display: inline-block;
+		min-width: 2.2em;
+		margin-top: 0.3vw;
+		padding: 0.1em 0.5em;
+		border-radius: 99px;
+		background: var(--stage-deep);
+		color: var(--yellow);
+		font-weight: 700;
+		font-size: 1.5vw;
+	}
+	.podium.win {
+		transform: translateY(-1.5vw);
+	}
+	.podium.win .readout {
+		border-color: var(--yellow);
+		box-shadow: 0 0 2.5vw var(--yellow);
+	}
+	.podium.bust .readout {
+		color: #a8622a;
+		text-shadow: none;
 		text-decoration: line-through;
 	}
-	.scores.small li {
-		font-size: 1.8vw;
+	@media (prefers-reduced-motion: reduce) {
+		.podium {
+			transition: none;
+		}
 	}
 </style>

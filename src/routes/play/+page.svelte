@@ -11,6 +11,7 @@
 	/** @type {number | null} */
 	let bid = $state(null);
 	let myBid = $state({ round: -1, amount: 0 });
+	let changing = $state(false);
 
 	onMount(() => connect(() => joined && send({ type: 'join', id, name })));
 
@@ -29,6 +30,13 @@
 		send({ type: 'join', id, name });
 	}
 
+	/** Keeps only digits and shows them as dollars while typing. @param {Event & { currentTarget: HTMLInputElement }} e */
+	function formatBid(e) {
+		const digits = e.currentTarget.value.replace(/\D/g, '').slice(0, 9);
+		bid = digits ? Number(digits) : null;
+		e.currentTarget.value = bid == null ? '' : money(bid);
+	}
+
 	/** @param {SubmitEvent} e */
 	function submitBid(e) {
 		e.preventDefault();
@@ -36,49 +44,67 @@
 		send({ type: 'bid', amount: bid });
 		myBid = { round: game.round, amount: bid };
 		bid = null;
+		changing = false;
 	}
 </script>
 
 <main>
-	<h1 class="logo">The Price Is Right</h1>
+	<h1 class="logo">The Price<br />Is Right!</h1>
 
 	{#if !joined || (game && !me)}
 		<form onsubmit={join}>
 			<label for="name">Your name</label>
 			<input id="name" bind:value={name} maxlength="20" autocomplete="nickname" required />
-			<button>Join</button>
+			<button>Join the game</button>
 		</form>
 	{:else if !game || !me}
-		<p>Connecting…</p>
+		<p>Connecting to the game…</p>
 	{:else}
-		<p class="me">{me.name} · {me.score} pt{me.score === 1 ? '' : 's'}</p>
+		<p class="tag"><span>{me.name}</span><b>{me.score} pt{me.score === 1 ? '' : 's'}</b></p>
 
 		{#if game.phase === 'lobby'}
-			<p>You're in! Waiting for the host to start…</p>
+			<p class="call">Come on down!</p>
+			<p>You're in. The game starts when the host is ready.</p>
 		{:else if game.phase === 'over'}
-			<p class="big">You finished #{rank}</p>
+			<p class="call">You finished #{rank}</p>
 		{:else if game.item}
+			<p class="muted">Item {game.round + 1} of {game.total}</p>
 			<h2>{game.item.name}</h2>
 			{#if game.phase === 'bidding'}
-				{#if bidThisRound}
-					<p>Your bid: <b>{money(myBid.amount)}</b></p>
-					<p class="muted">You can change it until the host reveals the price.</p>
-				{/if}
-				<form onsubmit={submitBid}>
-					<label for="bid">{bidThisRound ? 'Change bid' : 'Your bid'} ($)</label>
-					<input id="bid" type="number" inputmode="numeric" min="0" step="1" bind:value={bid} required />
-					<button>Lock it in</button>
-				</form>
-			{:else}
-				<p>Actual price: <b>{money(game.item.price)}</b></p>
-				{#if game.winners.includes(id)}
-					<p class="big win">You won this round!</p>
-				{:else if me.bid == null}
-					<p>You didn't bid.</p>
-				{:else if me.bid > (game.item.price ?? 0)}
-					<p>You bid {money(me.bid)}. Overbid!</p>
+				{#if bidThisRound && !changing}
+					<p class="said">Your bid is locked in</p>
+					<p class="readout led">{money(myBid.amount)}</p>
+					<p class="muted">You can change it until the price is revealed.</p>
+					<button class="secondary" onclick={() => ((bid = myBid.amount), (changing = true))}>Change bid</button>
 				{:else}
-					<p>You bid {money(me.bid)}. Not the closest.</p>
+					<form onsubmit={submitBid}>
+						<label for="bid">{changing ? 'Your new bid' : 'Your bid'}</label>
+						<!-- title="" stops the browser's "Please fill out this field" hover tooltip -->
+						<input
+							id="bid"
+							class="readout led"
+							inputmode="numeric"
+							autocomplete="off"
+							placeholder="$0"
+							title=""
+							value={bid == null ? '' : money(bid)}
+							oninput={formatBid}
+							required
+						/>
+						<button>Lock in bid</button>
+					</form>
+				{/if}
+			{:else}
+				<p class="said">The actual retail price is</p>
+				<p class="price marquee led">{money(game.item.price)}</p>
+				{#if game.winners.includes(id)}
+					<p class="call">You won this round!</p>
+				{:else if me.bid == null}
+					<p>You didn't bid this round.</p>
+				{:else if me.bid > (game.item.price ?? 0)}
+					<p>You bid {money(me.bid)}. That's over.</p>
+				{:else}
+					<p>You bid {money(me.bid)}. Someone was closer.</p>
 				{/if}
 			{/if}
 		{/if}
@@ -94,6 +120,10 @@
 		flex-direction: column;
 		gap: 0.75rem;
 		font-size: 1.2rem;
+		line-height: 1.4;
+	}
+	.logo {
+		font-size: 1.7rem;
 	}
 	h2,
 	p {
@@ -104,15 +134,54 @@
 		flex-direction: column;
 		gap: 0.5rem;
 	}
-	.me,
-	.muted {
-		opacity: 0.75;
+	.tag {
+		display: flex;
+		justify-content: space-between;
+		padding: 0.5rem 1rem;
+		border-radius: 0.75rem;
+		background: var(--pink);
+		color: var(--stage-deep);
+		font-family: var(--display);
 	}
-	.big {
-		font-size: 2rem;
-		font-weight: 800;
+	.tag b {
+		font-weight: 400;
 	}
-	.win {
-		color: #ffcc00;
+	.muted,
+	.said {
+		opacity: 0.8;
+	}
+	.call {
+		font-family: var(--display);
+		font-size: 1.8rem;
+		color: var(--yellow);
+		transform: rotate(-2deg);
+	}
+	/* Podium readout, shared by the bid input and the locked-in bid. */
+	.readout {
+		width: 100%;
+		margin: 0;
+		padding: 0.75rem 1rem;
+		border: 0.3rem solid #4a4a66;
+		border-radius: 0.75rem;
+		font-size: 3rem;
+		text-align: center;
+	}
+	p.readout {
+		border-color: var(--yellow);
+		box-shadow: 0 0 1.5rem #ffd21f55;
+	}
+	.secondary {
+		background: none;
+		box-shadow: inset 0 0 0 0.15rem #ffffff55;
+		color: #fff;
+	}
+	.readout::placeholder {
+		color: #6a3410;
+		text-shadow: none;
+	}
+	.price {
+		align-self: center;
+		padding: 0.2em 0.6em;
+		font-size: 2.8rem;
 	}
 </style>

@@ -19,15 +19,15 @@
 </script>
 
 <main>
-	<h1 class="logo">Host</h1>
+	<h1>Host controls</h1>
 	{#if !game}
-		<p>Connecting…</p>
+		<p>Connecting to the game…</p>
 	{:else}
 		{#if game.error}<p class="error" role="alert">{game.error}</p>{/if}
 
 		{#if game.phase === 'lobby' || game.phase === 'over'}
 			<p>{game.phase === 'over' ? 'Game over! ' : ''}{game.players.length} player(s) joined.</p>
-			<label for="set">Item set</label>
+			<label for="set">Items to play</label>
 			<select id="set" value={set} onchange={(e) => (picked = e.currentTarget.value)}>
 				{#each game.sets ?? [] as name (name)}
 					<option value={name}>{name}</option>
@@ -44,7 +44,7 @@
 				<button onclick={() => send({ type: 'reveal' })}>Reveal price</button>
 			{:else}
 				<p>Price: <b>{money(game.item.price)}</b></p>
-				<p>Winner: <b>{winnerNames || 'nobody (all over)'}</b></p>
+				<p>Won by: <b>{winnerNames || 'nobody (all over)'}</b></p>
 				<button onclick={() => send({ type: 'next' })}>
 					{game.round + 1 < game.total ? 'Next item' : 'Final scores'}
 				</button>
@@ -71,23 +71,23 @@
 	p {
 		margin: 0;
 	}
-	select {
-		font: inherit;
-		font-size: 1.25rem;
-		padding: 0.75rem 1rem;
-		border-radius: 0.75rem;
+	h1 {
+		margin: 0 0 0.5rem;
+		color: var(--yellow);
 	}
 	.muted {
 		opacity: 0.7;
 	}
 	.error {
-		background: #d6001c;
+		background: var(--pink);
+		color: var(--stage-deep);
 		padding: 0.75rem;
 		border-radius: 0.75rem;
 	}
 	.secondary {
 		margin-top: 2rem;
-		background: #ffffff22;
+		background: none;
+		box-shadow: inset 0 0 0 0.15rem #ffffff55;
 		color: #fff;
 	}
 </style>
