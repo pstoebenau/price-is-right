@@ -1,0 +1,12 @@
+[
+	{ "name": "Osetra Caviar, 1 oz", "price": 87, "description": "Malossol black sturgeon roe, shipped cold", "image": "https://m.media-amazon.com/images/I/81OoS0qjaZL._AC_SL1500_.jpg" },
+	{ "name": "Pre-Owned Rolex", "price": 11315, "description": "Certified pre-owned, from Amazon's luxury store", "image": "https://m.media-amazon.com/images/I/71aoAXcNJmL._AC_SL1500_.jpg" },
+	{ "name": "Montblanc Meisterstück 145 Fountain Pen", "price": 925, "description": "Gold-trimmed classic, medium nib", "image": "https://m.media-amazon.com/images/I/61Zken0pXpL._AC_SL1500_.jpg" },
+	{ "name": "A5 Japanese Wagyu Ribeye, 6 Pack", "price": 816, "description": "Six full 16 oz steaks of top-grade wagyu", "image": "https://m.media-amazon.com/images/I/91AzzGMql-L._AC_SL1500_.jpg" },
+	{ "name": "1 oz Gold Dragon Bar", "price": 4850, "description": "Australian Perth Mint, graded MS-70", "image": "https://m.media-amazon.com/images/I/61sUJF0MNFL._AC_SL1500_.jpg" },
+	{ "name": "100% Cashmere Throw Blanket", "price": 187, "description": "For the sofa. Pure cashmere.", "image": "https://m.media-amazon.com/images/I/91k30ZJ8fQL._AC_SL1500_.jpg" },
+	{ "name": "Leica Camera", "price": 6679, "description": "German-made full-frame compact", "image": "https://m.media-amazon.com/images/I/712aNsQNesL._AC_SL1500_.jpg" },
+	{ "name": "Baccarat Crystal Decanter", "price": 339, "description": "French lead crystal for your whiskey", "image": "https://m.media-amazon.com/images/I/61CcFp06SEL._AC_SL1500_.jpg" },
+	{ "name": "4D Zero Gravity Massage Chair", "price": 1800, "description": "Full body recliner with body scan", "image": "https://m.media-amazon.com/images/I/61yeTjYhUzL._AC_SL1500_.jpg" },
+	{ "name": "6-Person Hot Tub", "price": 3959, "description": "29 therapy jets and digital controls", "image": "https://m.media-amazon.com/images/I/411RKm46n-L._AC_SL1500_.jpg" }
+]
