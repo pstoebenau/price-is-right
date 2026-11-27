@@ -18,7 +18,7 @@ in `static/` (e.g. `static/items/mixer.jpg` → `"image": "/items/mixer.jpg"`). 
 
 ```sh
 npm install
-npm run dev     # also listens on your LAN so phones can join via http://<laptop-ip>:5173/play
+npm run dev     # also listens on your LAN; open the TV page via http://<laptop-ip>:5173 so the join QR code works on phones
 npm test
 ```
 

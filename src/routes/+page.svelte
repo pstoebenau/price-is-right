@@ -1,8 +1,12 @@
 <script>
 	import { onMount } from 'svelte';
+	import { renderSVG } from 'uqr';
 	import { live, connect, money } from '#lib/game.svelte.js';
 
 	onMount(() => connect());
+
+	const joinUrl = `${location.origin}/play`;
+	const qr = `data:image/svg+xml,${encodeURIComponent(renderSVG(joinUrl, { border: 2 }))}`;
 
 	const game = $derived(live.game);
 	const ranked = $derived(game ? game.players.toSorted((a, b) => b.score - a.score) : []);
@@ -16,7 +20,10 @@
 		<p class="hint">Connecting…</p>
 	{:else if game.phase === 'lobby'}
 		<h1 class="logo big">The Price<br />Is Right!</h1>
-		<p class="hint">Join on your phone: <strong>{location.host}/play</strong></p>
+		<div class="join">
+			<img class="qr" src={qr} alt="QR code to join at {joinUrl}" />
+			<p class="hint">Scan to join, or go to<br /><strong>{location.host}/play</strong></p>
+		</div>
 		<ul class="names">
 			{#each game.players as p (p.id)}
 				<li>{p.name}</li>
@@ -92,6 +99,20 @@
 	}
 	.muted {
 		opacity: 0.7;
+	}
+	.join {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 3vw;
+		margin: 2vw 0;
+	}
+	.qr {
+		width: 18vw;
+		border-radius: 1vw;
+	}
+	.join .hint {
+		text-align: left;
 	}
 	.names {
 		list-style: none;
