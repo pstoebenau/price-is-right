@@ -15,7 +15,7 @@ The host never sees the price before the reveal, so the host can play too (e.g. 
 
 Edit `items.json` (`name`, `price` in whole dollars, optional `description` and `image`). Images can be a URL or a file
 in `static/` (e.g. `static/items/mixer.jpg` → `"image": "/items/mixer.jpg"`). The file is re-read at the start of each game.
-The bundled Thanksgiving set uses Wikimedia Commons photos; credit new CC-licensed photos in `static/items/CREDITS.md`.
+The bundled Thanksgiving set uses Amazon prices from Nov 26, 2026 (rounded to whole dollars) and links to Amazon's product images rather than copying them into this repo.
 
 ## Develop
 

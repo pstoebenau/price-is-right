@@ -1,12 +1,12 @@
 [
-	{ "name": "Butterball Whole Turkey", "price": 30, "description": "16 lb, frozen, ready to roast", "image": "/items/turkey.jpg" },
-	{ "name": "Ocean Spray Jellied Cranberry Sauce", "price": 2, "description": "14 oz can, ridges included", "image": "/items/cranberry-sauce.jpg" },
-	{ "name": "Le Creuset Oval Dutch Oven", "price": 450, "description": "6.75 quart enameled cast iron", "image": "/items/dutch-oven.jpg" },
-	{ "name": "Good Cook Meat Thermometer", "price": 8, "description": "Oven-safe dial thermometer", "image": "/items/thermometer.jpg" },
-	{ "name": "Costco Pumpkin Pie", "price": 7, "description": "12 inch, almost 4 pounds of pie", "image": "/items/pumpkin-pie.jpg" },
-	{ "name": "Outdoor Turkey Fryer Kit", "price": 90, "description": "30 quart pot and propane burner (tank not included)", "image": "/items/turkey-fryer.jpg" },
-	{ "name": "Bottle of Beaujolais Nouveau", "price": 14, "description": "This year's release, 750 ml", "image": "/items/beaujolais.jpg" },
-	{ "name": "Hamilton Beach Electric Carving Knife", "price": 25, "description": "With carving fork and storage case", "image": "/items/carving-knife.jpg" },
-	{ "name": "Homemade Stuffing", "price": 20, "description": "All the ingredients for a pan that serves 12", "image": "/items/stuffing.jpg" },
-	{ "name": "Fall Flower Centerpiece", "price": 75, "description": "Florist-made arrangement for the table", "image": "/items/centerpiece.jpg" }
+	{ "name": "Ocean Spray Jellied Cranberry Sauce", "price": 2, "description": "One 14 oz can", "image": "https://m.media-amazon.com/images/I/817VvGDn+JL._SL1500_.jpg" },
+	{ "name": "Le Creuset Oval Dutch Oven", "price": 480, "description": "6.75 quart enameled cast iron, cerise red", "image": "https://m.media-amazon.com/images/I/61IdrTLlJgL._AC_SL1500_.jpg" },
+	{ "name": "TempPro Instant-Read Meat Thermometer", "price": 13, "description": "Digital, foldable probe, reads in 1 second", "image": "https://m.media-amazon.com/images/I/71GAhr0v1hL._AC_SL1500_.jpg" },
+	{ "name": "6 ft Inflatable Turkey", "price": 20, "description": "Yard decoration with LED lights", "image": "https://m.media-amazon.com/images/I/81vOgFnfK+L._AC_SL1500_.jpg" },
+	{ "name": "Bayou Classic Turkey Fryer", "price": 143, "description": "32 quart stainless pot with lid, poultry rack and thermometer", "image": "https://m.media-amazon.com/images/I/61unjjpYRdL._AC_SL1500_.jpg" },
+	{ "name": "Libby's 100% Pure Pumpkin", "price": 5, "description": "Two 15 oz cans", "image": "https://m.media-amazon.com/images/I/71rnQQsKyRL._SL1500_.jpg" },
+	{ "name": "Cuisinart Roasting Pan with Rack", "price": 51, "description": "16 inch stainless steel", "image": "https://m.media-amazon.com/images/I/61XZU-4+cBL._AC_SL1500_.jpg" },
+	{ "name": "Hamilton Beach Electric Knife Set", "price": 31, "description": "Carving knife, serving fork and storage case", "image": "https://m.media-amazon.com/images/I/61QDdpK50uL._AC_SL1500_.jpg" },
+	{ "name": "Stove Top Chicken Stuffing Mix", "price": 6, "description": "Four 6 oz boxes", "image": "https://m.media-amazon.com/images/I/811PxvYgbLL._SL1500_.jpg" },
+	{ "name": "Emile Henry Deep Pie Dish", "price": 50, "description": "9 inch ceramic, made in France", "image": "https://m.media-amazon.com/images/I/617DnfeYT-L._AC_SL1500_.jpg" }
 ]
