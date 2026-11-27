@@ -1,0 +1,10 @@
+[
+	{ "name": "KitchenAid Stand Mixer", "price": 449, "description": "5-quart tilt-head, empire red" },
+	{ "name": "Nintendo Switch 2", "price": 449, "description": "Console with Joy-Con 2 controllers" },
+	{ "name": "Dyson V15 Cordless Vacuum", "price": 749, "description": "With laser dust detection" },
+	{ "name": "LEGO Millennium Falcon", "price": 849, "description": "Ultimate Collector Series, 7,541 pieces" },
+	{ "name": "Box of Cheerios", "price": 5, "description": "Family size, 18 oz" },
+	{ "name": "Instant Pot Duo", "price": 99, "description": "7-in-1 pressure cooker, 6 quart" },
+	{ "name": "YETI Tundra 45 Cooler", "price": 325, "description": "Holds 26 cans with a 2:1 ice ratio" },
+	{ "name": "Peloton Bike", "price": 1445, "description": "Indoor exercise bike with touchscreen" }
+]
