@@ -1,9 +1,7 @@
-<script>
+<script lang="ts">
 	import { onMount } from 'svelte';
 	import { renderSVG } from 'uqr';
-	import { live, connect, money } from '#lib/game.svelte.js';
-
-	/** @typedef {import('#lib/game.svelte.js').Player} Player */
+	import { live, connect, money, type Player } from '#lib/game.svelte.ts';
 
 	onMount(() => connect());
 
@@ -15,11 +13,10 @@
 	const champs = $derived(ranked.filter((p) => p.score === ranked[0]?.score));
 	const roundWinners = $derived(game ? game.players.filter((p) => game.winners.includes(p.id)) : []);
 
-	/** @param {Player[]} players */
-	const wins = (players) => `${players.map((p) => p.name).join(' & ')} ${players.length > 1 ? 'win' : 'wins'}!`;
+	const wins = (players: Player[]) => `${players.map((p) => p.name).join(' & ')} ${players.length > 1 ? 'win' : 'wins'}!`;
 
-	/** What a contestant's podium readout shows in the current phase. @param {Player} p */
-	function readout(p) {
+	/** What a contestant's podium readout shows in the current phase. */
+	function readout(p: Player): { text: string; win?: boolean; bust?: boolean } {
 		if (game?.phase === 'bidding') return { text: p.hasBid ? 'Bid in' : '' };
 		if (game?.phase === 'reveal')
 			return {
@@ -32,7 +29,7 @@
 	}
 </script>
 
-{#snippet row(/** @type {Player[]} */ players)}
+{#snippet row(players: Player[])}
 	<ol class="row" aria-label="Contestants">
 		{#each players as p (p.id)}
 			{@const r = readout(p)}

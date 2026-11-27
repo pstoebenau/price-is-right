@@ -1,12 +1,14 @@
 import { readdirSync, readFileSync } from 'node:fs';
-import { WebSocketServer } from 'ws';
+import type { Server, ServerWebSocket, WebSocketHandler } from 'bun';
+
+type Item = { name: string; price: number; image?: string; description?: string };
+type Data = { isHost?: boolean; playerId?: string };
+type Client = ServerWebSocket<Data>;
 
 /**
  * Closest bid without going over wins. Tied bids share the win; if everyone is over, nobody wins.
- * @param {{ id: string, amount: number }[]} bids
- * @param {number} price
  */
-export function findWinners(bids, price) {
+export function findWinners(bids: { id: string; amount: number }[], price: number) {
 	const valid = bids.filter((b) => b.amount <= price);
 	const best = Math.max(...valid.map((b) => b.amount));
 	return valid.filter((b) => b.amount === best).map((b) => b.id);
@@ -21,31 +23,25 @@ function listSets() {
 	}
 }
 
-/** @param {string} set @returns {{ name: string, price: number, image?: string, description?: string }[]} */
-function loadItems(set) {
+function loadItems(set: string): Item[] {
 	// Only names from the directory listing, so a crafted name can't read other files.
 	if (!listSets().includes(set)) throw new Error(`no item set "${set}"`);
 	const items = JSON.parse(readFileSync(`items/${set}.json`, 'utf8'));
 	if (!Array.isArray(items)) throw new Error(`items/${set}.json must be an array`);
-	return items.filter((i) => typeof i?.name === 'string' && typeof i?.price === 'number');
+	return items.filter((i: any) => typeof i?.name === 'string' && typeof i?.price === 'number');
 }
 
 /** One global game per server. */
 const game = {
-	/** @type {'lobby' | 'bidding' | 'reveal' | 'over'} */
-	phase: 'lobby',
+	phase: 'lobby' as 'lobby' | 'bidding' | 'reveal' | 'over',
 	round: 0,
-	/** @type {ReturnType<typeof loadItems>} */
-	items: [],
-	/** @type {Map<string, { id: string, name: string, score: number, bid: number | null }>} */
-	players: new Map(),
-	/** @type {string[]} */
-	winners: [],
+	items: [] as Item[],
+	players: new Map<string, { id: string; name: string; score: number; bid: number | null }>(),
+	winners: [] as string[],
 	error: ''
 };
 
-/** @type {WebSocketServer} */
-let wss;
+const clients = new Set<Client>();
 
 /** Price and bids stay off the wire until the reveal, even for the host, so the host can play too. */
 function view(isHost = false) {
@@ -70,7 +66,7 @@ function view(isHost = false) {
 }
 
 function broadcast() {
-	for (const ws of wss.clients) ws.send(JSON.stringify(view(ws.isHost)));
+	for (const ws of clients) ws.send(JSON.stringify(view(ws.data.isHost)));
 }
 
 function clearBids() {
@@ -78,11 +74,10 @@ function clearBids() {
 	game.winners = [];
 }
 
-/** @param {import('ws').WebSocket} ws @param {any} msg */
-function handle(ws, msg) {
+function handle(ws: Client, msg: any) {
 	switch (msg?.type) {
 		case 'host':
-			ws.isHost = true;
+			ws.data.isHost = true;
 			break;
 		case 'join': {
 			const id = String(msg.id ?? '').slice(0, 40);
@@ -91,11 +86,11 @@ function handle(ws, msg) {
 			const p = game.players.get(id);
 			if (p) p.name = name;
 			else game.players.set(id, { id, name, score: 0, bid: null });
-			ws.playerId = id;
+			ws.data.playerId = id;
 			break;
 		}
 		case 'bid': {
-			const p = game.players.get(ws.playerId);
+			const p = game.players.get(ws.data.playerId ?? '');
 			const amount = Number(msg.amount);
 			if (!p || game.phase !== 'bidding' || !Number.isInteger(amount) || amount < 0 || amount > 1e9) return;
 			p.bid = amount;
@@ -120,10 +115,10 @@ function handle(ws, msg) {
 			if (game.phase !== 'bidding') return;
 			const bids = [...game.players.values()].filter((p) => p.bid !== null);
 			game.winners = findWinners(
-				bids.map((p) => ({ id: p.id, amount: /** @type {number} */ (p.bid) })),
+				bids.map((p) => ({ id: p.id, amount: p.bid! })),
 				game.items[game.round].price
 			);
-			for (const id of game.winners) /** @type {any} */ (game.players.get(id)).score++;
+			for (const id of game.winners) game.players.get(id)!.score++;
 			game.phase = 'reveal';
 			break;
 		}
@@ -147,20 +142,34 @@ function handle(ws, msg) {
 	broadcast();
 }
 
-/** Serves the game on `/ws` of an existing HTTP server; other upgrades (e.g. Vite HMR) are left alone. */
-export function attach(/** @type {import('node:http').Server} */ server) {
-	wss = new WebSocketServer({ noServer: true });
-	server.on('upgrade', (req, socket, head) => {
-		if (req.url === '/ws') wss.handleUpgrade(req, socket, head, (ws) => wss.emit('connection', ws));
-	});
-	wss.on('connection', (ws) => {
-		ws.on('message', (data) => {
-			try {
-				handle(ws, JSON.parse(String(data)));
-			} catch (e) {
-				console.error('bad message', e);
-			}
-		});
+/** Bun's `websocket` handler for `Bun.serve`; sockets get here via `upgrade`. */
+export const websocket: WebSocketHandler<Data> = {
+	open(ws) {
+		clients.add(ws);
 		ws.send(JSON.stringify(view()));
+	},
+	message(ws, data) {
+		try {
+			handle(ws, JSON.parse(String(data)));
+		} catch (e) {
+			console.error('bad message', e);
+		}
+	},
+	close(ws) {
+		clients.delete(ws);
+	}
+};
+
+/** Upgrades `/ws` requests to the game socket; true when it did. */
+export function upgrade(req: Request, server: Server<Data>) {
+	return new URL(req.url).pathname === '/ws' && server.upgrade(req, { data: {} });
+}
+
+/** Game socket alone, for dev where Vite owns the HTTP server and proxies `/ws` here. */
+export function serveGame(port = 0) {
+	return Bun.serve({
+		port,
+		fetch: (req, server) => (upgrade(req, server) ? undefined : new Response('Not found', { status: 404 })),
+		websocket
 	});
 }

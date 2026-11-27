@@ -1,6 +1,6 @@
-<script>
+<script lang="ts">
 	import { onMount } from 'svelte';
-	import { live, connect, send, money } from '#lib/game.svelte.js';
+	import { live, connect, send, money } from '#lib/game.svelte.ts';
 
 	// Not crypto.randomUUID: it is missing on plain-http LAN addresses.
 	const id = localStorage.getItem('id') ?? Math.random().toString(36).slice(2);
@@ -8,8 +8,7 @@
 
 	let name = $state(localStorage.getItem('name') ?? '');
 	let joined = $state(!!localStorage.getItem('name'));
-	/** @type {number | null} */
-	let bid = $state(null);
+	let bid = $state<number | null>(null);
 	let myBid = $state({ round: -1, amount: 0 });
 	let changing = $state(false);
 
@@ -20,8 +19,7 @@
 	const bidThisRound = $derived(me?.hasBid && myBid.round === game?.round);
 	const rank = $derived(game && me ? game.players.filter((p) => p.score > me.score).length + 1 : 0);
 
-	/** @param {SubmitEvent} e */
-	function join(e) {
+	function join(e: SubmitEvent) {
 		e.preventDefault();
 		name = name.trim();
 		if (!name) return;
@@ -30,15 +28,14 @@
 		send({ type: 'join', id, name });
 	}
 
-	/** Keeps only digits and shows them as dollars while typing. @param {Event & { currentTarget: HTMLInputElement }} e */
-	function formatBid(e) {
+	/** Keeps only digits and shows them as dollars while typing. */
+	function formatBid(e: Event & { currentTarget: HTMLInputElement }) {
 		const digits = e.currentTarget.value.replace(/\D/g, '').slice(0, 9);
 		bid = digits ? Number(digits) : null;
 		e.currentTarget.value = bid == null ? '' : money(bid);
 	}
 
-	/** @param {SubmitEvent} e */
-	function submitBid(e) {
+	function submitBid(e: SubmitEvent) {
 		e.preventDefault();
 		if (!game || bid == null || !Number.isInteger(bid) || bid < 0) return;
 		send({ type: 'bid', amount: bid });

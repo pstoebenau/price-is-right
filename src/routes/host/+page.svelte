@@ -1,6 +1,6 @@
-<script>
+<script lang="ts">
 	import { onMount } from 'svelte';
-	import { live, connect, send, money } from '#lib/game.svelte.js';
+	import { live, connect, send, money } from '#lib/game.svelte.ts';
 
 	onMount(() => connect(() => send({ type: 'host' })));
 

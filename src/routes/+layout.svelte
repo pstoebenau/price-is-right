@@ -1,12 +1,13 @@
-<script>
+<script lang="ts">
 	import '@fontsource/bowlby-one';
 	import '@fontsource/doto/900.css';
 	import '@fontsource-variable/rubik';
 	import favicon from '#lib/assets/favicon.svg';
-	import { live } from '#lib/game.svelte.js';
+	import { live } from '#lib/game.svelte.ts';
 
-	/** @type {{children: import('svelte').Snippet}} */
-	let { children } = $props();
+	import type { Snippet } from 'svelte';
+
+	let { children }: { children: Snippet } = $props();
 </script>
 
 <svelte:head>

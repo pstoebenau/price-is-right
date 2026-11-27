@@ -20,9 +20,9 @@ The bundled sets use Amazon prices from Nov 26, 2026 (rounded to whole dollars) 
 ## Develop
 
 ```sh
-npm install
-npm run dev     # also listens on your LAN; open the TV page via http://<laptop-ip>:5173 so the join QR code works on phones
-npm test
+bun install
+bun run dev     # also listens on your LAN; open the TV page via http://<laptop-ip>:5173 so the join QR code works on phones
+bun test
 ```
 
 ## Deploy on Dokploy
