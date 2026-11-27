@@ -13,9 +13,9 @@ The host never sees the price before the reveal, so the host can play too (e.g. 
 
 ## Items
 
-Edit `items.json` (`name`, `price` in whole dollars, optional `description` and `image`). Images can be a URL or a file
-in `static/` (e.g. `static/items/mixer.jpg` → `"image": "/items/mixer.jpg"`). The file is re-read at the start of each game.
-The bundled Thanksgiving set uses Amazon prices from Nov 26, 2026 (rounded to whole dollars) and links to Amazon's product images rather than copying them into this repo.
+Each `items/<set>.json` file is an item set; the host picks one in the lobby. Each item has `name`, `price` in whole dollars, and optional `description` and `image`. Images can be a URL or a file
+in `static/` (e.g. `static/items/mixer.jpg` → `"image": "/items/mixer.jpg"`). Sets are re-read at the start of each game.
+The bundled sets use Amazon prices from Nov 26, 2026 (rounded to whole dollars) and links to Amazon's product images rather than copying them into this repo.
 
 ## Develop
 

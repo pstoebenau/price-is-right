@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { WebSocketServer } from 'ws';
 
 /**
@@ -12,10 +12,21 @@ export function findWinners(bids, price) {
 	return valid.filter((b) => b.amount === best).map((b) => b.id);
 }
 
-/** @returns {{ name: string, price: number, image?: string, description?: string }[]} */
-function loadItems() {
-	const items = JSON.parse(readFileSync('items.json', 'utf8'));
-	if (!Array.isArray(items)) throw new Error('items.json must be an array');
+/** Item sets are the `items/*.json` files, named without the extension. */
+function listSets() {
+	try {
+		return readdirSync('items').filter((f) => f.endsWith('.json')).map((f) => f.slice(0, -5)).sort();
+	} catch {
+		return [];
+	}
+}
+
+/** @param {string} set @returns {{ name: string, price: number, image?: string, description?: string }[]} */
+function loadItems(set) {
+	// Only names from the directory listing, so a crafted name can't read other files.
+	if (!listSets().includes(set)) throw new Error(`no item set "${set}"`);
+	const items = JSON.parse(readFileSync(`items/${set}.json`, 'utf8'));
+	if (!Array.isArray(items)) throw new Error(`items/${set}.json must be an array`);
 	return items.filter((i) => typeof i?.name === 'string' && typeof i?.price === 'number');
 }
 
@@ -53,7 +64,8 @@ function view(isHost = false) {
 			bid: reveal ? p.bid : undefined
 		})),
 		winners: game.winners,
-		error: isHost ? game.error : undefined
+		error: isHost ? game.error : undefined,
+		sets: isHost ? listSets() : undefined
 	};
 }
 
@@ -91,12 +103,12 @@ function handle(ws, msg) {
 		}
 		case 'start':
 			if (game.phase !== 'lobby' && game.phase !== 'over') return;
-			// Re-read each game so edits to items.json apply without a restart.
+			// Re-read each game so edits to item files apply without a restart.
 			try {
-				game.items = loadItems();
-				game.error = game.items.length ? '' : 'items.json has no valid items';
+				game.items = loadItems(String(msg.set));
+				game.error = game.items.length ? '' : `items/${msg.set}.json has no valid items`;
 			} catch (e) {
-				game.error = `Could not load items.json: ${e instanceof Error ? e.message : e}`;
+				game.error = `Could not load items: ${e instanceof Error ? e.message : e}`;
 			}
 			if (game.error) break;
 			for (const p of game.players.values()) p.score = 0;

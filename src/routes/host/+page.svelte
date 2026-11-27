@@ -10,6 +10,9 @@
 		game?.players.filter((p) => game.winners.includes(p.id)).map((p) => p.name).join(', ')
 	);
 
+	let picked = $state('');
+	const set = $derived(picked || game?.sets?.[0] || '');
+
 	function reset() {
 		if (confirm('Reset scores and go back to the lobby?')) send({ type: 'reset' });
 	}
@@ -22,12 +25,17 @@
 	{:else}
 		{#if game.error}<p class="error" role="alert">{game.error}</p>{/if}
 
-		{#if game.phase === 'lobby'}
-			<p>{game.players.length} player(s) joined.</p>
-			<button onclick={() => send({ type: 'start' })} disabled={!game.players.length}>Start game</button>
-		{:else if game.phase === 'over'}
-			<p>Game over!</p>
-			<button onclick={() => send({ type: 'start' })}>Play again</button>
+		{#if game.phase === 'lobby' || game.phase === 'over'}
+			<p>{game.phase === 'over' ? 'Game over! ' : ''}{game.players.length} player(s) joined.</p>
+			<label for="set">Item set</label>
+			<select id="set" value={set} onchange={(e) => (picked = e.currentTarget.value)}>
+				{#each game.sets ?? [] as name (name)}
+					<option value={name}>{name}</option>
+				{/each}
+			</select>
+			<button onclick={() => send({ type: 'start', set })} disabled={!game.players.length || !set}>
+				{game.phase === 'over' ? 'Play again' : 'Start game'}
+			</button>
 		{:else if game.item}
 			<p class="muted">Item {game.round + 1} of {game.total}</p>
 			<h2>{game.item.name}</h2>
@@ -62,6 +70,12 @@
 	h2,
 	p {
 		margin: 0;
+	}
+	select {
+		font: inherit;
+		font-size: 1.25rem;
+		padding: 0.75rem 1rem;
+		border-radius: 0.75rem;
 	}
 	.muted {
 		opacity: 0.7;

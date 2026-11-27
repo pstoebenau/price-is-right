@@ -45,15 +45,18 @@
 				{#if game.item.image}<img src={game.item.image} alt={game.item.name} />{/if}
 				<h1>{game.item.name}</h1>
 				{#if game.item.description}<p class="desc">{game.item.description}</p>{/if}
+			</section>
 
+			<section class="panel">
 				{#if game.phase === 'bidding'}
+					<h2>Place your bids!</h2>
 					<ul class="names">
 						{#each game.players as p (p.id)}
 							<li class={{ done: p.hasBid }}>{p.name} {p.hasBid ? '✓' : '…'}</li>
 						{/each}
 					</ul>
 				{:else}
-					<p class="price">Actual retail price: <b>{money(game.item.price)}</b></p>
+					<p class="price">Actual retail price<b>{money(game.item.price)}</b></p>
 					<ol class="scores">
 						{#each bids as p (p.id)}
 							<li class={{ win: game.winners.includes(p.id), over: (p.bid ?? 0) > (game.item.price ?? 0) }}>
@@ -65,7 +68,7 @@
 				{/if}
 			</section>
 
-			<aside>
+			<aside class="panel">
 				<h2>Scores</h2>
 				<ol class="scores small">
 					{#each ranked as p (p.id)}
@@ -130,40 +133,54 @@
 	.names li.done {
 		background: #1db954;
 	}
+	/* Item, bids/results and scores sit side by side so the reveal never drops below the fold. */
 	.stage {
 		display: grid;
-		grid-template-columns: 1fr 22vw;
+		grid-template-columns: 1.2fr 1fr 18vw;
 		gap: 3vw;
-		align-items: start;
+		align-items: center;
+		height: calc(100vh - 6vw);
 	}
 	.item {
 		text-align: center;
 	}
 	.item h1 {
-		font-size: 4.5vw;
+		font-size: 3.5vw;
 		margin: 0.5vw 0;
 	}
 	.item img {
-		max-height: 35vh;
+		max-height: 55vh;
 		max-width: 100%;
 		border-radius: 1vw;
 		background: #fff;
+	}
+	.panel {
+		max-height: 100%;
+		overflow: auto;
+	}
+	.panel h2 {
+		margin: 0;
+		font-size: 2.2vw;
+		text-align: center;
 	}
 	.desc {
 		font-size: 2.2vw;
 		opacity: 0.85;
 	}
 	.price {
-		font-size: 3.5vw;
+		margin: 0;
+		text-align: center;
+		font-size: 2.2vw;
 	}
 	.price b {
+		display: block;
+		font-size: 6vw;
 		color: #ffcc00;
 	}
 	.scores {
 		list-style: none;
 		padding: 0;
 		margin: 1vw auto;
-		max-width: 50vw;
 		display: grid;
 		gap: 0.6vw;
 	}
@@ -173,7 +190,7 @@
 		background: #ffffff18;
 		padding: 0.6vw 1.5vw;
 		border-radius: 0.8vw;
-		font-size: 2.6vw;
+		font-size: 2.2vw;
 	}
 	.scores li.win {
 		background: #ffcc00;
@@ -185,9 +202,5 @@
 	}
 	.scores.small li {
 		font-size: 1.8vw;
-	}
-	aside h2 {
-		margin: 0;
-		font-size: 2.2vw;
 	}
 </style>

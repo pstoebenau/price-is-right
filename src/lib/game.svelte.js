@@ -7,7 +7,8 @@
  *   item?: { name: string, image?: string, description?: string, price?: number },
  *   players: Player[],
  *   winners: string[],
- *   error?: string
+ *   error?: string,
+ *   sets?: string[]
  * }} Game
  */
 
